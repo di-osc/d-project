@@ -155,4 +155,4 @@ test.py
 *.ipynb
 poetry.lock
 project.lock
-project.yaml
+project.yml
