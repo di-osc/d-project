@@ -1,0 +1,19 @@
+title: demo
+description: describe project details
+vars:
+  name: demo
+check_requirements: false
+directories: []
+workflows:
+  all:
+    - command1
+    - command2
+commands:
+  - name: command1
+    help: command1 help
+    script:
+      - python **
+  - name: command2
+    help: command2 help
+    script:
+      - python **

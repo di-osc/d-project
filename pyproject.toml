@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "d-project"
+version = "0.1.0"
+description = "项目流程管理命令行工具"
+authors = ["wangmengdi <wangmengdi@smart-insight.com.cn>"]
+readme = "README.md"
+packages = [{include = "d_project"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+typer = "^0.7.0"
+rich = "^13.3.1"
+srsly = "^2.4.5"
+confection = "^0.0.4"
+wasabi = "^1.1.1"
+
+[tool.poetry.scripts]
+project = "d_project.app:app"
