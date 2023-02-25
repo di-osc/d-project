@@ -191,12 +191,10 @@ def _parse_override(value: Any) -> Any:
         return str(value)
         
         
-def substitute_project_variables(
-    config: Dict[str, Any],
-    overrides: Dict[str, Any] = SimpleFrozenDict(),
-    key: str = "vars",
-    env_key: str = "env",
-) -> Dict[str, Any]:
+def substitute_project_variables(config: Dict[str, Any],
+                                 overrides: Dict[str, Any] = SimpleFrozenDict(),
+                                 key: str = "vars",
+                                 env_key: str = "env") -> Dict[str, Any]:
     """Interpolate variables in the project file using the config system.
     config (Dict[str, Any]): The project config.
     overrides (Dict[str, Any]): Optional config overrides.
@@ -279,12 +277,10 @@ def join_command(command: List[str]) -> str:
     return " ".join(shlex.quote(cmd) for cmd in command)
 
 
-def run_command(
-    command: Union[str, List[str]],
-    *,
-    stdin: Optional[Any] = None,
-    capture: bool = False,
-) -> subprocess.CompletedProcess:
+def run_command(command: Union[str, List[str]],
+                *,
+                stdin: Optional[Any] = None,
+                capture: bool = False,) -> subprocess.CompletedProcess:
     """Run a command on the command line as a subprocess. If the subprocess
     returns a non-zero exit code, a system exit is performed.
     command (str / List[str]): The command. If provided as a string, the
@@ -422,9 +418,7 @@ def get_fileinfo(project_dir: Path, paths: List[str]) -> List[Dict[str, Optional
         data.append({"path": path, "md5": md5})
     return data
     
-def validate_subcommand(
-    commands: Sequence[str], workflows: Sequence[str], subcommand: str
-) -> None:
+def validate_subcommand(commands: Sequence[str], workflows: Sequence[str], subcommand: str) -> None:
     """Check that a subcommand is valid and defined. Raises an error otherwise.
     commands (Sequence[str]): The available commands.
     subcommand (str): The subcommand.
@@ -520,10 +514,7 @@ def get_hash(data, exclude: Iterable[str] = tuple()) -> str:
     return hashlib.md5(data_str).hexdigest()
 
 
-def check_rerun(
-    project_dir: Path,
-    command: Dict[str, Any]
-) -> bool:
+def check_rerun(project_dir: Path, command: Dict[str, Any]) -> bool:
     """Check if a command should be rerun because its settings or inputs/outputs
     changed.
     project_dir (Path): The current project directory.
@@ -603,15 +594,13 @@ def working_dir(path: Union[str, Path]) -> Iterator[Path]:
         os.chdir(str(prev_cwd))
 
 
-def project_run(
-    project_dir: Path,
-    subcommand: str,
-    *,
-    overrides: Dict[str, Any] = SimpleFrozenDict(),
-    force: bool = False,
-    dry: bool = False,
-    capture: bool = False,
-) -> None:
+def project_run(project_dir: Path,
+                subcommand: str,
+                *,
+                overrides: Dict[str, Any] = SimpleFrozenDict(),
+                force: bool = False,
+                dry: bool = False,
+                capture: bool = False) -> None:
     """Run a named script defined in the project.yml. If the script is part
     of the default pipeline (defined in the "run" section), DVC is used to
     execute the command, so it can determine whether to rerun it. It then
