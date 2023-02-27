@@ -543,12 +543,10 @@ def check_rerun(project_dir: Path, command: Dict[str, Any]) -> bool:
     return get_hash(lock_entry) != get_hash(entry)
 
 
-def run_commands(
-    commands: Iterable[str] = SimpleFrozenList(),
-    silent: bool = False,
-    dry: bool = False,
-    capture: bool = False,
-) -> None:
+def run_commands(commands: Iterable[str] = SimpleFrozenList(),
+                 silent: bool = False,
+                 dry: bool = False,
+                 capture: bool = False) -> None:
     """Run a sequence of commands in a subprocess, in order.
     commands (List[str]): The string commands.
     silent (bool): Don't print the commands.
