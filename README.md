@@ -28,5 +28,5 @@ project run some_workflow
 生成READMD.md文件
 
 ```
-project document --output ./READMD.md
+project document --output ./README.md
 ```
