@@ -4,6 +4,11 @@
 
 项目命令管理工具
 
+### 特点
+
+- 通过配置文件管理项目命令
+- 导出readme文件
+
 ### 安装
 
 ```
@@ -21,10 +26,6 @@ project init
 project init ./configs/project.yml
 ```
 
-project.yml文件的结构如下
-
-* [ ] 
-
 - 运行自定义的命令或者流程
 
 ```
@@ -32,6 +33,9 @@ project run some_command
 
 project run some_workflow
 ```
+
+- 参照本项目[project.yml](./project.yml)中的修改命令命令或者流程
+
 
 - 生成READMD.md文件
 
