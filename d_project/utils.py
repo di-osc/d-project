@@ -25,8 +25,8 @@ PROJECT_FILE = "project.yml"
 PROJECT_LOCK = "project.lock"
 
 class ENV_VARS:
-    CONFIG_OVERRIDES = "SPACY_CONFIG_OVERRIDES"
-    PROJECT_USE_GIT_VERSION = "SPACY_PROJECT_USE_GIT_VERSION"
+    CONFIG_OVERRIDES = "D_CONFIG_OVERRIDES"
+    PROJECT_USE_GIT_VERSION = "D_PROJECT_USE_GIT_VERSION"
 
 
 class SimpleFrozenDict(dict):
@@ -226,7 +226,7 @@ def load_project_config(path: Path,
     overrides (Dict[str, Any]): Optional config overrides.
     RETURNS (Dict[str, Any]): The loaded project.yml.
     """
-    config_path = path / PROJECT_FILE
+    config_path = Path(path, PROJECT_FILE)
     if not config_path.exists():
         console.print(f"Can't find {PROJECT_FILE}")
     invalid_err = f"Invalid {PROJECT_FILE}. Double-check that the YAML is correct."
@@ -571,7 +571,7 @@ def run_commands(commands: Iterable[str] = SimpleFrozenList(),
         elif len(command) and command[0] in ("pip", "pip3"):
             command = [sys.executable, "-m", "pip", *command[1:]]
         if not silent:
-            print(f"Running command: {join_command(command)}")
+            msg.info(title=f"Running command: {join_command(command)}")
         if not dry:
             run_command(command, capture=capture)
             
@@ -644,7 +644,7 @@ def project_run(project_dir: Path,
                 err_kwargs = {"exits": 1} if not dry else {}
                 msg.fail(err, err_help, **err_kwargs)
         with working_dir(project_dir) as current_dir:
-            msg.divider(subcommand)
+            console.rule(title=subcommand)
             rerun = check_rerun(current_dir, cmd)
             if not rerun and not force:
                 msg.info(f"Skipping '{cmd['name']}': nothing changed")
@@ -735,72 +735,150 @@ MARKER_END = "<!-- PROJECT: AUTO-GENERATED DOCS END (do not remove) -->"
 # If this marker is used in an existing README, it's ignored and not replaced
 MARKER_IGNORE = "<!-- PROJECT: IGNORE -->"
 
+## 中文介绍
+INTRO_PROJECT_ZH = f"""[`{PROJECT_FILE}`]({PROJECT_FILE})定义了项目所有的命令以及由命令组成的流程. """
+INTRO_COMMANDS_ZH = f"""以下是项目中的命令. 它们都可以通过`project run [name]`来运行."""
+INTRO_WORKFLOWS_ZH = f"""以下是项目中的流程. 它们都可以通过 `project run [name]`来运行,并且会按照顺序依次运行命令."""
+INTRO_ASSETS_ZH = f"""以下是项目中定义的数据. 他们都可以通过 `project assets`来下载."""
 
 
-def project_document(
-    project_dir: Path, output_file: Path, *, no_emoji: bool = False
-) -> None:
+from enum import Enum
+class AvailableLanguages(str, Enum):
+    zh = "zh"
+    en = "en"
+
+
+
+def project_document(project_dir: Path,
+                     output_file: Path, 
+                     *, 
+                     no_emoji: bool = False,
+                     lang: AvailableLanguages = AvailableLanguages.zh) -> None:
     is_stdout = str(output_file) == "-"
     config = load_project_config(project_dir)
-    md = MarkdownRenderer(no_emoji=no_emoji)
-    md.add(MARKER_START)
-    title = config.get("title")
-    description = config.get("description")
-    md.add(md.title(1, f"Project{f': {title}' if title else ''}", "🪐"))
-    if description:
-        md.add(description)
-    md.add(md.title(2, PROJECT_FILE, "📋"))
-    md.add(INTRO_PROJECT)
-    # Commands
-    cmds = config.get("commands", [])
-    data = [(md.code(cmd["name"]), cmd.get("help", "")) for cmd in cmds]
-    if data:
-        md.add(md.title(3, "Commands", "⏯"))
-        md.add(INTRO_COMMANDS)
-        md.add(md.table(data, ["Command", "Description"]))
-    # Workflows
-    wfs = config.get("workflows", {}).items()
-    data = [(md.code(n), " &rarr; ".join(md.code(w) for w in stp)) for n, stp in wfs]
-    if data:
-        md.add(md.title(3, "Workflows", "⏭"))
-        md.add(INTRO_WORKFLOWS)
-        md.add(md.table(data, ["Workflow", "Steps"]))
-    # Assets
-    assets = config.get("assets", [])
-    data = []
-    for a in assets:
-        source = "Git" if a.get("git") else "URL" if a.get("url") else "Local"
-        dest_path = a["dest"]
-        dest = md.code(dest_path)
-        if source == "Local":
-            # Only link assets if they're in the repo
-            with working_dir(project_dir) as p:
-                if (p / dest_path).exists():
-                    dest = md.link(dest, dest_path)
-        data.append((dest, source, a.get("description", "")))
-    if data:
-        md.add(md.title(3, "Assets", "🗂"))
-        md.add(INTRO_ASSETS)
-        md.add(md.table(data, ["File", "Source", "Description"]))
-    md.add(MARKER_END)
-    # Output result
-    if is_stdout:
-        print(md.text)
-    else:
-        content = md.text
-        if output_file.exists():
-            with output_file.open("r", encoding="utf8") as f:
-                existing = f.read()
-            if MARKER_IGNORE in existing:
-                msg.warn("Found ignore marker in existing file: skipping", output_file)
-                return
-            if MARKER_START in existing and MARKER_END in existing:
-                msg.info("Found existing file: only replacing auto-generated docs")
-                before = existing.split(MARKER_START)[0]
-                after = existing.split(MARKER_END)[1]
-                content = f"{before}{content}{after}"
-            else:
-                msg.warn("Replacing existing file")
-        with output_file.open("w", encoding="utf8") as f:
-            f.write(content)
-        msg.good("Saved project documentation", output_file)
+    if lang == AvailableLanguages.en:
+        md = MarkdownRenderer(no_emoji=no_emoji)
+        md.add(MARKER_START)
+        title = config.get("title")
+        description = config.get("description")
+        md.add(md.title(1, f"Project{f': {title}' if title else ''}", "🪐"))
+        if description:
+            md.add(description)
+        md.add(md.title(2, PROJECT_FILE, "📋"))
+        md.add(INTRO_PROJECT)
+        # Commands
+        cmds = config.get("commands", [])
+        data = [(md.code(cmd["name"]), cmd.get("help", "")) for cmd in cmds]
+        if data:
+            md.add(md.title(3, "Commands", "⏯"))
+            md.add(INTRO_COMMANDS)
+            md.add(md.table(data, ["Command", "Description"]))
+        # Workflows
+        wfs = config.get("workflows", {}).items()
+        data = [(md.code(n), " &rarr; ".join(md.code(w) for w in stp)) for n, stp in wfs]
+        if data:
+            md.add(md.title(3, "Workflows", "⏭"))
+            md.add(INTRO_WORKFLOWS)
+            md.add(md.table(data, ["Workflow", "Steps"]))
+        # Assets
+        assets = config.get("assets", [])
+        data = []
+        for a in assets:
+            source = "Git" if a.get("git") else "URL" if a.get("url") else "Local"
+            dest_path = a["dest"]
+            dest = md.code(dest_path)
+            if source == "Local":
+                # Only link assets if they're in the repo
+                with working_dir(project_dir) as p:
+                    if (p / dest_path).exists():
+                        dest = md.link(dest, dest_path)
+            data.append((dest, source, a.get("description", "")))
+        if data:
+            md.add(md.title(3, "Assets", "🗂"))
+            md.add(INTRO_ASSETS)
+            md.add(md.table(data, ["File", "Source", "Description"]))
+        md.add(MARKER_END)
+        # Output result
+        if is_stdout:
+            print(md.text)
+        else:
+            content = md.text
+            if output_file.exists():
+                with output_file.open("r", encoding="utf8") as f:
+                    existing = f.read()
+                if MARKER_IGNORE in existing:
+                    msg.warn("Found ignore marker in existing file: skipping", output_file)
+                    return
+                if MARKER_START in existing and MARKER_END in existing:
+                    msg.info("Found existing file: only replacing auto-generated docs")
+                    before = existing.split(MARKER_START)[0]
+                    after = existing.split(MARKER_END)[1]
+                    content = f"{before}{content}{after}"
+                else:
+                    msg.warn("Replacing existing file")
+            with output_file.open("w", encoding="utf8") as f:
+                f.write(content)
+            msg.good("Saved project documentation", output_file)
+    elif lang == AvailableLanguages.zh:
+        md = MarkdownRenderer(no_emoji=no_emoji)
+        md.add(MARKER_START)
+        title = config.get("title")
+        description = config.get("description")
+        md.add(md.title(1, f"项目{f': {title}' if title else ''}", "🪐"))
+        if description:
+            md.add(description)
+        md.add(md.title(2, PROJECT_FILE, "📋"))
+        md.add(INTRO_PROJECT_ZH)
+        # Commands
+        cmds = config.get("commands", [])
+        data = [(md.code(cmd["name"]), cmd.get("help", "")) for cmd in cmds]
+        if data:
+            md.add(md.title(3, "命令", "⏯"))
+            md.add(INTRO_COMMANDS_ZH)
+            md.add(md.table(data, ["命令", "描述"]))
+        # Workflows
+        wfs = config.get("workflows", {}).items()
+        data = [(md.code(n), " &rarr; ".join(md.code(w) for w in stp)) for n, stp in wfs]
+        if data:
+            md.add(md.title(3, "流程", "⏭"))
+            md.add(INTRO_WORKFLOWS_ZH)
+            md.add(md.table(data, ["流程", "步骤"]))
+        # Assets
+        assets = config.get("assets", [])
+        data = []
+        for a in assets:
+            source = "Git" if a.get("git") else "URL" if a.get("url") else "Local"
+            dest_path = a["dest"]
+            dest = md.code(dest_path)
+            if source == "Local":
+                # Only link assets if they're in the repo
+                with working_dir(project_dir) as p:
+                    if (p / dest_path).exists():
+                        dest = md.link(dest, dest_path)
+            data.append((dest, source, a.get("description", "")))
+        if data:
+            md.add(md.title(3, "Assets", "🗂"))
+            md.add(INTRO_ASSETS_ZH)
+            md.add(md.table(data, ["File", "Source", "Description"]))
+        md.add(MARKER_END)
+        # Output result
+        if is_stdout:
+            print(md.text)
+        else:
+            content = md.text
+            if output_file.exists():
+                with output_file.open("r", encoding="utf8") as f:
+                    existing = f.read()
+                if MARKER_IGNORE in existing:
+                    msg.warn("Found ignore marker in existing file: skipping", output_file)
+                    return
+                if MARKER_START in existing and MARKER_END in existing:
+                    msg.info("Found existing file: only replacing auto-generated docs")
+                    before = existing.split(MARKER_START)[0]
+                    after = existing.split(MARKER_END)[1]
+                    content = f"{before}{content}{after}"
+                else:
+                    msg.warn("Replacing existing file")
+            with output_file.open("w", encoding="utf8") as f:
+                f.write(content)
+            msg.good("Saved project documentation", output_file)

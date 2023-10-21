@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ValidationError, StrictStr, Field
-from typing import Type, Dict, List, Any, Optional, Union
+from typing import Type, Dict, List, Any, Optional
 from collections import defaultdict
 
 
@@ -20,30 +20,6 @@ def validate(schema: Type[BaseModel], obj: Dict[str, Any]) -> List[str]:
             data[err_loc].append(error.get("msg"))
         return [f"[{loc}] {', '.join(msg)}" for loc, msg in data.items()] 
     
-    
-class ProjectConfigAssetGitItem(BaseModel):
-    # fmt: off
-    repo: StrictStr = Field(..., title="URL of Git repo to download from")
-    path: StrictStr = Field(..., title="File path or sub-directory to download (used for sparse checkout)")
-    branch: StrictStr = Field("master", title="Branch to clone from")
-    # fmt: on
-
-
-class ProjectConfigAssetURL(BaseModel):
-    # fmt: off
-    dest: StrictStr = Field(..., title="Destination of downloaded asset")
-    url: Optional[StrictStr] = Field(None, title="URL of asset")
-    checksum: Optional[str] = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
-    description: StrictStr = Field("", title="Description of asset")
-    # fmt: on
-
-
-class ProjectConfigAssetGit(BaseModel):
-    # fmt: off
-    git: ProjectConfigAssetGitItem = Field(..., title="Git repo information")
-    checksum: Optional[str] = Field(None, title="MD5 hash of file", regex=r"([a-fA-F\d]{32})")
-    description: Optional[StrictStr] = Field(None, title="Description of asset")
-    # fmt: on
 
 
 class ProjectConfigCommand(BaseModel):
@@ -66,11 +42,10 @@ class ProjectConfigSchema(BaseModel):
     # fmt: off
     vars: Dict[StrictStr, Any] = Field({}, title="Optional variables to substitute in commands")
     env: Dict[StrictStr, Any] = Field({}, title="Optional variable names to substitute in commands, mapped to environment variable names")
-    assets: List[Union[ProjectConfigAssetURL, ProjectConfigAssetGit]] = Field([], title="Data assets")
     workflows: Dict[StrictStr, List[StrictStr]] = Field({}, title="Named workflows, mapped to list of project commands to run in order")
     commands: List[ProjectConfigCommand] = Field([], title="Project command shortucts")
     title: Optional[str] = Field(None, title="Project title")
-    spacy_version: Optional[StrictStr] = Field(None, title="spaCy version range that the project is compatible with")
+    description: Optional[str] = Field(None, title="Project description")
     # fmt: on
 
     class Config:
